@@ -254,7 +254,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
   );
 
   const exportData = () => {
-    const data = localStorage.getItem('mindful-track-state');
+    const data = localStorage.getItem('mindfultrack_data_v1');
     if (!data) return;
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

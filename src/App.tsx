@@ -7,7 +7,9 @@ import {
   Plus, 
   ChevronLeft, 
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Trash2,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mood, Habit, DayLog, AppState } from './types';
@@ -24,7 +26,7 @@ const DEFAULT_HABITS: Habit[] = [
   { id: '4', name: 'Hydration', icon: '💧', color: 'cyan' },
 ];
 
-const STORAGE_KEY = 'mindfultrack_data';
+const STORAGE_KEY = 'mindfultrack_data_v1';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'today' | 'stats' | 'history'>('today');
@@ -82,25 +84,36 @@ export default function App() {
     setIsAddModalOpen(false);
   };
 
-  const deleteHabit = (habitId: string) => {
-    if (confirm('Are you sure you want to remove this habit?')) {
-      setState(prev => {
-        const newLogs: Record<string, DayLog> = {};
-        Object.keys(prev.logs).forEach(date => {
-          const log = prev.logs[date];
-          newLogs[date] = {
-            ...log,
-            habits: log.habits.filter(id => id !== habitId)
-          };
-        });
+  const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
 
-        return {
-          ...prev,
-          habits: prev.habits.filter(h => h.id !== habitId),
-          logs: newLogs
+  const confirmDelete = () => {
+    if (!habitToDelete) return;
+    const habitId = habitToDelete;
+    
+    setState(prev => {
+      const newLogs: Record<string, DayLog> = {};
+      Object.keys(prev.logs).forEach(date => {
+        const log = prev.logs[date];
+        newLogs[date] = {
+          ...log,
+          habits: log.habits.filter(id => id !== habitId)
         };
       });
+
+      return {
+        ...prev,
+        habits: prev.habits.filter(h => h.id !== habitId),
+        logs: newLogs
+      };
+    });
+    setHabitToDelete(null);
+  };
+
+  const deleteHabit = (habitId: string) => {
+    if (window.navigator.vibrate) {
+      window.navigator.vibrate(50);
     }
+    setHabitToDelete(habitId);
   };
 
   const changeDate = (days: number) => {
@@ -276,6 +289,65 @@ export default function App() {
           onAdd={addHabit} 
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {habitToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setHabitToDelete(null)}
+              className="absolute inset-0 bg-warm-ink/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl space-y-6"
+            >
+              <div className="flex justify-between items-start">
+                <div className="p-3 bg-rose-50 text-rose-500 rounded-2xl">
+                  <Trash2 size={24} />
+                </div>
+                <button 
+                  onClick={() => setHabitToDelete(null)}
+                  className="p-2 hover:bg-warm-cream rounded-full transition-colors text-warm-ink/20"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-serif font-bold text-warm-ink">Remove Habit?</h3>
+                <p className="text-warm-ink/50 leading-relaxed">
+                  Are you sure you want to remove <span className="font-bold text-warm-ink">"{state.habits.find(h => h.id === habitToDelete)?.name}"</span>? 
+                  This will also clear it from your history.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setHabitToDelete(null)}
+                  className="flex-1 py-4 rounded-2xl font-bold text-warm-ink/40 hover:bg-warm-cream transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.navigator.vibrate) window.navigator.vibrate([50, 50, 50]);
+                    confirmDelete();
+                  }}
+                  className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-bold shadow-lg shadow-rose-500/20 active:scale-95 transition-all"
+                >
+                  Remove
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

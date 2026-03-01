@@ -1,9 +1,9 @@
 const CACHE_NAME = 'mindfultrack-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.svg',
+  './',
+  'index.html',
+  'manifest.json',
+  'icon.svg',
 ];
 
 self.addEventListener('install', (event) => {
