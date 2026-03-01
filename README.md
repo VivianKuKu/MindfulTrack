@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# MindfulTrack
 
-# Run and deploy your AI Studio app
+A heartfelt daily mood and habit tracker built with React, Tailwind CSS, and Framer Motion.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/56967149-fc35-4b24-a820-9ec47c2bed4f
+- **Daily Ritual**: Track your mood and habits in a beautiful, minimalist interface.
+- **Journey**: Visualize your progress and mood trends over time.
+- **Reflections**: A quiet space to look back at your past thoughts.
+- **PWA Support**: Installable on your mobile device for a native app experience.
+- **Offline Ready**: Works offline using Service Workers.
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend**: React 19, Vite, Tailwind CSS
+- **Animation**: Framer Motion
+- **Icons**: Lucide React
+- **Deployment**: GitHub Actions & GitHub Pages
 
+## Getting Started
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Clone the repository.
+2. Install dependencies: `npm install`
+3. Start the dev server: `npm run dev`
+4. Build for production: `npm run build`
+
+## Deployment
+
+This project is configured to deploy automatically to GitHub Pages using GitHub Actions whenever you push to the `main` branch.
