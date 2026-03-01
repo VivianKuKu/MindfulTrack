@@ -123,7 +123,7 @@ export default function App() {
             </p>
           )}
         </div>
-        {activeTab !== 'history' && (
+        {activeTab === 'today' && (
           <div className="flex gap-2">
             <button 
               onClick={() => changeDate(-1)}
