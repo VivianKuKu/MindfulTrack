@@ -1,7 +1,7 @@
 import React from 'react';
-import { Check, Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Check, Plus, Trash2, ChevronUp, ChevronDown, Flame } from 'lucide-react';
 import { Habit } from '../types';
-import { cn } from '../utils';
+import { cn, calculateStreak } from '../utils';
 
 interface HabitListProps {
   habits: Habit[];
@@ -10,9 +10,10 @@ interface HabitListProps {
   onDelete: (id: string) => void;
   onMove: (id: string, direction: 'up' | 'down') => void;
   onAdd?: () => void;
+  logs?: Record<string, { habits: string[] }>;
 }
 
-export const HabitList: React.FC<HabitListProps> = ({ habits, completedIds, onToggle, onDelete, onMove, onAdd }) => {
+export const HabitList: React.FC<HabitListProps> = ({ habits, completedIds, onToggle, onDelete, onMove, onAdd, logs }) => {
   const [isManageMode, setIsManageMode] = React.useState(false);
 
   return (

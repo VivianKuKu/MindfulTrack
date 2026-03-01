@@ -19,6 +19,7 @@ import { Calendar, TrendingUp, Zap, Heart, Activity, Info, ChevronRight, Chevron
 
 interface StatsDashboardProps {
   logs: Record<string, DayLog>;
+  habitsCount: number;
 }
 
 const moodValues: Record<Mood, number> = {
@@ -37,7 +38,7 @@ const moodLabels: Record<number, string> = {
   1: 'Terrible'
 };
 
-export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
+export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCount }) => {
   const [view, setView] = useState<'week' | 'month'>('week');
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeDetail, setActiveDetail] = useState<'mood' | 'habits' | null>(null);
@@ -87,7 +88,11 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
     const last30DaysLogs = last30DaysDates.map(d => logs[d]).filter(Boolean);
 
     const avgMoodValue = last30DaysLogs.reduce((acc, log) => acc + (log.mood ? moodValues[log.mood] : 0), 0) / (last30DaysLogs.length || 1);
-    const habitCompletionRate = (last30DaysLogs.reduce((acc, log) => acc + (log.habits?.length || 0), 0) / (last30DaysLogs.length * 4 || 1)) * 100;
+    
+    // Calculate completion rate based on total possible habits in 30 days
+    const totalPossibleHabits = 30 * (habitsCount || 1);
+    const actualCompletedHabits = last30DaysLogs.reduce((acc, log) => acc + (log.habits?.length || 0), 0);
+    const habitCompletionRate = (actualCompletedHabits / totalPossibleHabits) * 100;
     
     // Mood distribution for detail view
     const moodDistribution = last30DaysLogs.reduce((acc, log) => {
@@ -95,11 +100,15 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
       return acc;
     }, {} as Record<string, number>);
 
-    // Volatility calculation
-    const moodVolatility = last30DaysLogs.reduce((acc, log, i, arr) => {
-      if (i === 0 || !log.mood || !arr[i-1]?.mood) return acc;
-      return acc + Math.abs(moodValues[log.mood] - moodValues[arr[i-1].mood]);
-    }, 0) / (last30DaysLogs.length || 1);
+    // Improved Volatility calculation (comparing consecutive recorded moods)
+    const recordedMoods = last30DaysLogs.map(l => moodValues[l.mood!]).filter(v => v !== undefined);
+    let totalDiff = 0;
+    let comparisons = 0;
+    for (let i = 0; i < recordedMoods.length - 1; i++) {
+      totalDiff += Math.abs(recordedMoods[i] - recordedMoods[i+1]);
+      comparisons++;
+    }
+    const moodVolatility = comparisons > 0 ? totalDiff / comparisons : 0;
 
     // Best Day of Week
     const dayStats: Record<string, { sum: number, count: number }> = {};
@@ -122,11 +131,20 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
       }
     });
 
-    // Streak
+    // Streak (General) - Consistent with HabitList logic
     let streak = 0;
-    for (const dateStr of last30DaysDates) {
-      if (logs[dateStr]?.habits?.length > 0) streak++;
-      else break;
+    let checkDate = today;
+    let checkDateStr = format(checkDate, 'yyyy-MM-dd');
+
+    if (!(logs[checkDateStr]?.habits?.length > 0)) {
+      checkDate = subDays(checkDate, 1);
+      checkDateStr = format(checkDate, 'yyyy-MM-dd');
+    }
+
+    while (logs[checkDateStr]?.habits?.length > 0) {
+      streak++;
+      checkDate = subDays(checkDate, 1);
+      checkDateStr = format(checkDate, 'yyyy-MM-dd');
     }
 
     // Total Reflections
@@ -140,7 +158,8 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
       stability: moodVolatility < 0.8 ? 'Steady' : moodVolatility < 1.5 ? 'Balanced' : 'Dynamic',
       bestDay,
       streak,
-      totalReflections
+      totalReflections,
+      entriesCount: last30DaysLogs.length
     };
   };
 
@@ -583,8 +602,10 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
             <h4 className="text-lg font-bold font-serif text-warm-ink">Cycle Analysis</h4>
           </div>
           <p className="text-sm text-warm-ink/70 leading-relaxed mb-6">
-            Your emotional landscape has been <span className="font-bold text-warm-ink">{stats.stability.toLowerCase()}</span> lately. 
-            You've maintained a consistent habit rhythm, which often correlates with higher mood stability.
+            Based on your {stats.entriesCount} entries this month, your emotional landscape has been <span className="font-bold text-warm-ink">{stats.stability.toLowerCase()}</span>. 
+            {stats.completion > 50 
+              ? ` Your habit consistency (${stats.completion}%) is supporting your ${stats.stability.toLowerCase()} flow.` 
+              : " Building more consistent daily rituals could help stabilize your emotional rhythm."}
           </p>
           <div className="flex gap-4">
             <div className="flex-1 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white/50">
@@ -593,7 +614,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs }) => {
             </div>
             <div className="flex-1 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white/50">
               <div className="text-[10px] font-bold text-warm-ink/40 uppercase tracking-widest mb-1">Streak</div>
-              <div className="font-bold text-warm-ink">4 Days</div>
+              <div className="font-bold text-warm-ink">{stats.streak} Days</div>
             </div>
           </div>
         </div>

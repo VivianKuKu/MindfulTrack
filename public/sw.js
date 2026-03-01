@@ -3,7 +3,7 @@ const ASSETS = [
   './',
   'index.html',
   'manifest.json',
-  'icon.svg',
+  'icon.png',
 ];
 
 // Install event: cache initial assets

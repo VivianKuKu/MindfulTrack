@@ -226,7 +226,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
             >
-              <StatsDashboard logs={state.logs} />
+              <StatsDashboard logs={state.logs} habitsCount={state.habits.length} />
             </motion.div>
           )}
 
@@ -271,12 +271,12 @@ export default function App() {
       </main>
 
       {/* Navigation Bar */}
-      <nav className="fixed bottom-8 left-8 right-8 max-w-md mx-auto">
-        <div className="bg-warm-ink text-warm-bg rounded-[2.5rem] p-2.5 flex justify-between items-center shadow-2xl shadow-warm-ink/20 border border-white/10">
+      <nav className="fixed bottom-0 left-0 right-0 z-40">
+        <div className="bg-warm-ink text-warm-bg p-4 pb-8 flex justify-around items-center shadow-[0_-10px_30px_rgba(74,63,53,0.15)] border-t border-white/5">
           <button
             onClick={() => setActiveTab('today')}
             className={cn(
-              "flex items-center gap-2 px-6 py-4 rounded-full transition-all duration-500",
+              "flex items-center gap-2 px-6 py-3 rounded-2xl transition-all duration-500",
               activeTab === 'today' ? "bg-warm-bg text-warm-ink shadow-lg" : "text-warm-bg/40 hover:text-warm-bg/70"
             )}
           >
@@ -287,7 +287,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('stats')}
             className={cn(
-              "flex items-center gap-2 px-6 py-4 rounded-full transition-all duration-500",
+              "flex items-center gap-2 px-6 py-3 rounded-2xl transition-all duration-500",
               activeTab === 'stats' ? "bg-warm-bg text-warm-ink shadow-lg" : "text-warm-bg/40 hover:text-warm-bg/70"
             )}
           >
@@ -298,7 +298,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('history')}
             className={cn(
-              "flex items-center gap-2 px-6 py-4 rounded-full transition-all duration-500",
+              "flex items-center gap-2 px-6 py-3 rounded-2xl transition-all duration-500",
               activeTab === 'history' ? "bg-warm-bg text-warm-ink shadow-lg" : "text-warm-bg/40 hover:text-warm-bg/70"
             )}
           >
