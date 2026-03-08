@@ -11,6 +11,12 @@
   --color-warm-rose: #c38d9e;
   --color-warm-sage: #85997e;
   --color-warm-cream: #f5f2ed;
+  
+  --color-mood-great: #064e3b;
+  --color-mood-good: #10b981;
+  --color-mood-neutral: #f59e0b;
+  --color-mood-bad: #ef4444;
+  --color-mood-terrible: #7f1d1d;
 }
 
 @layer base {

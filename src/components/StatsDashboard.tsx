@@ -189,7 +189,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
           </div>
           <div className="flex gap-2">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-warm-rose"></div>
+              <div className="w-2 h-2 rounded-full bg-mood-good"></div>
               <span className="text-[8px] font-bold text-warm-ink/40 uppercase">Mood</span>
             </div>
             <div className="flex items-center gap-1">
@@ -226,10 +226,11 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
                 {hasMood && (
                   <div className={cn(
                     "absolute w-8 h-8 rounded-full border-2 opacity-40",
-                    log.mood === 'great' ? "border-warm-rose" :
-                      log.mood === 'good' ? "border-warm-sage" :
-                        log.mood === 'neutral' ? "border-warm-accent" :
-                          "border-warm-ink/20"
+                    log.mood === 'great' ? "border-mood-great" :
+                      log.mood === 'good' ? "border-mood-good" :
+                        log.mood === 'neutral' ? "border-mood-neutral" :
+                          log.mood === 'bad' ? "border-mood-bad" :
+                            "border-mood-terrible"
                   )}></div>
                 )}
 
@@ -319,7 +320,13 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
               title="Avg Mood"
               value={stats.avgMood}
               icon={Heart}
-              color="text-warm-rose"
+              color={
+                Math.round(parseFloat(stats.avgMoodValue)) === 5 ? "text-mood-great" :
+                  Math.round(parseFloat(stats.avgMoodValue)) === 4 ? "text-mood-good" :
+                    Math.round(parseFloat(stats.avgMoodValue)) === 3 ? "text-mood-neutral" :
+                      Math.round(parseFloat(stats.avgMoodValue)) === 2 ? "text-mood-bad" :
+                        "text-mood-terrible"
+              }
               trend="Stable"
               onClick={() => setActiveDetail(activeDetail === 'mood' ? null : 'mood')}
             />
@@ -362,7 +369,14 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${percentage}%` }}
-                              className="h-full bg-warm-rose"
+                              className={cn(
+                                "h-full",
+                                moodKey === 'great' ? "bg-mood-great" :
+                                  moodKey === 'good' ? "bg-mood-good" :
+                                    moodKey === 'neutral' ? "bg-mood-neutral" :
+                                      moodKey === 'bad' ? "bg-mood-bad" :
+                                        "bg-mood-terrible"
+                              )}
                             />
                           </div>
                         </div>
@@ -454,8 +468,8 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
                 <AreaChart data={chartData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorMood" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#c38d9e" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#c38d9e" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-mood-good)" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="var(--color-mood-good)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f2ed" />
@@ -488,13 +502,13 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
                   <Area
                     type="monotone"
                     dataKey="mood"
-                    stroke="#c38d9e"
+                    stroke="var(--color-mood-good)"
                     strokeWidth={4}
                     fillOpacity={1}
                     fill="url(#colorMood)"
                     connectNulls
                     animationDuration={1500}
-                    dot={{ r: 4, fill: '#c38d9e', strokeWidth: 2, stroke: '#fff' }}
+                    dot={{ r: 4, fill: 'var(--color-mood-good)', strokeWidth: 2, stroke: '#fff' }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </AreaChart>
