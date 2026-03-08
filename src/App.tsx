@@ -226,7 +226,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
             >
-              <StatsDashboard logs={state.logs} habitsCount={state.habits.length} />
+              <StatsDashboard logs={state.logs} habitsCount={state.habits.length} habits={state.habits} />
             </motion.div>
           )}
 

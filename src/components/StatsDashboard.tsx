@@ -12,14 +12,16 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { DayLog, Mood } from '../types';
+import { DayLog, Mood, Habit } from '../types';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, subMonths, addMonths } from 'date-fns';
 import { cn } from '../utils';
 import { Calendar, TrendingUp, Zap, Heart, Activity, Info, ChevronRight, ChevronLeft, Shield, Download } from 'lucide-react';
+import { MoodFace } from './MoodFace';
 
 interface StatsDashboardProps {
   logs: Record<string, DayLog>;
   habitsCount: number;
+  habits: Habit[];
 }
 
 const moodValues: Record<Mood, number> = {
@@ -38,7 +40,7 @@ const moodLabels: Record<number, string> = {
   1: 'Terrible'
 };
 
-export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCount }) => {
+export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCount, habits }) => {
   const [view, setView] = useState<'week' | 'month'>('week');
   const [activeDetail, setActiveDetail] = useState<'mood' | 'habits' | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
@@ -88,8 +90,9 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
 
     const avgMoodValue = last30DaysLogs.reduce((acc, log) => acc + (log.mood ? moodValues[log.mood] : 0), 0) / (last30DaysLogs.length || 1);
 
-    // Calculate completion rate based on total possible habits in 30 days
-    const totalPossibleHabits = 30 * (habitsCount || 1);
+    // Calculate completion rate based on active logged days
+    const activeDays = Math.max(last30DaysLogs.length, 1);
+    const totalPossibleHabits = activeDays * (habitsCount || 1);
     const actualCompletedHabits = last30DaysLogs.reduce((acc, log) => acc + (log.habits?.length || 0), 0);
     const habitCompletionRate = (actualCompletedHabits / totalPossibleHabits) * 100;
 
@@ -149,6 +152,15 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
     // Total Reflections
     const totalReflections = last30DaysLogs.filter(l => l.note?.trim()).length;
 
+    const habitRecords = habits.map(habit => {
+      const count = last30DaysLogs.filter(log => log.habits?.includes(habit.id)).length;
+      return {
+        ...habit,
+        count,
+        completionRate: Math.round((count / Math.max(last30DaysLogs.length, 1)) * 100)
+      };
+    });
+
     return {
       avgMood: moodLabels[Math.round(avgMoodValue)] || 'Neutral',
       avgMoodValue: avgMoodValue.toFixed(1),
@@ -158,7 +170,8 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
       bestDay,
       streak,
       totalReflections,
-      entriesCount: last30DaysLogs.length
+      entriesCount: last30DaysLogs.length,
+      habitRecords
     };
   };
 
@@ -169,8 +182,8 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
     const monthEnd = endOfMonth(calendarMonth);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     const startDay = monthStart.getDay(); // 0 is Sunday
-
-    const blanks = Array(startDay).fill(null);
+    const blanksCount = startDay === 0 ? 6 : startDay - 1;
+    const blanks = Array(blanksCount).fill(null);
 
     const nextMonth = () => setCalendarMonth(addMonths(calendarMonth, 1));
     const prevMonth = () => setCalendarMonth(subMonths(calendarMonth, 1));
@@ -200,7 +213,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
         </div>
 
         <div className="grid grid-cols-7 gap-y-4 text-center">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
             <div key={`${d}-${i}`} className="text-[10px] font-bold text-warm-ink/20">{d}</div>
           ))}
 
@@ -214,34 +227,42 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
             const isToday = isSameDay(day, today);
 
             return (
-              <div key={dateStr} className="relative flex flex-col items-center justify-center h-10">
+              <div key={dateStr} className="relative flex flex-col items-center justify-start h-14 gap-1">
                 <span className={cn(
-                  "text-xs font-medium z-10",
-                  isToday ? "text-warm-accent font-bold" : "text-warm-ink/60"
+                  "text-[10px] font-medium z-10",
+                  isToday ? "text-warm-accent font-bold" : "text-warm-ink/40"
                 )}>
                   {format(day, 'd')}
                 </span>
 
-                {/* Mood Indicator Ring */}
-                {hasMood && (
-                  <div className={cn(
-                    "absolute w-8 h-8 rounded-full border-2 opacity-40",
-                    log.mood === 'great' ? "border-mood-great" :
-                      log.mood === 'good' ? "border-mood-good" :
-                        log.mood === 'neutral' ? "border-mood-neutral" :
-                          log.mood === 'bad' ? "border-mood-bad" :
-                            "border-mood-terrible"
-                  )}></div>
-                )}
+                <div className="relative flex items-center justify-center w-8 h-8">
+                  {hasMood ? (
+                    <div className="flex items-center justify-center drop-shadow-sm transition-transform hover:scale-110">
+                      <MoodFace
+                        mood={log.mood}
+                        size={32}
+                        className={
+                          log.mood === 'great' ? "text-mood-great" :
+                            log.mood === 'good' ? "text-mood-good" :
+                              log.mood === 'neutral' ? "text-mood-neutral" :
+                                log.mood === 'bad' ? "text-mood-bad" :
+                                  "text-mood-terrible"
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-warm-cream/50 border border-warm-cream shadow-sm"></div>
+                  )}
 
-                {/* Habit Dots */}
-                {habitCount > 0 && (
-                  <div className="absolute -bottom-1 flex gap-0.5">
-                    {Array.from({ length: Math.min(habitCount, 3) }).map((_, i) => (
-                      <div key={i} className="w-1 h-1 rounded-full bg-warm-accent"></div>
-                    ))}
-                  </div>
-                )}
+                  {/* Habit Dots */}
+                  {habitCount > 0 && (
+                    <div className="absolute -bottom-1.5 flex gap-0.5">
+                      {Array.from({ length: Math.min(habitCount, 3) }).map((_, i) => (
+                        <div key={i} className="w-1 h-1 rounded-full bg-warm-accent"></div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -399,7 +420,29 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ logs, habitsCoun
                     <h4 className="text-xs font-bold text-warm-ink uppercase tracking-widest">Consistency Insights</h4>
                     <span className="text-[10px] text-warm-ink/40">Last 30 Days</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+
+                  <div className="space-y-4 pt-2">
+                    {stats.habitRecords.map((habit) => (
+                      <div key={habit.id} className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs font-bold text-warm-ink">
+                          <div className="flex items-center gap-2">
+                            <span>{habit.icon}</span>
+                            <span>{habit.name}</span>
+                          </div>
+                          <span className="text-warm-ink/60">{habit.count} days</span>
+                        </div>
+                        <div className="h-1.5 bg-warm-cream rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${habit.completionRate}%` }}
+                            className="h-full bg-warm-accent"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mt-6">
                     <div className="p-4 bg-warm-cream/30 rounded-2xl">
                       <div className="text-[10px] font-bold text-warm-ink/40 uppercase mb-1">Stability</div>
                       <div className="text-lg font-serif font-bold text-warm-ink">{stats.stability}</div>
